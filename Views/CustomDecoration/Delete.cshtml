@@ -1,0 +1,21 @@
+﻿@model EventBooking.Models.CustomDecoration
+
+@{
+    ViewData["Title"] = "Delete Decoration";
+    Layout = "_Layout";
+}
+
+<h2 class="mb-4">Delete Decoration</h2>
+
+<div class="alert alert-warning">
+    Are you sure you want to delete the decoration "<strong>@Model.Name</strong>"?
+</div>
+
+@using (Html.BeginForm("DeleteConfirmed", "CustomDecoration", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.DecorationId)
+
+    <button type="submit" class="btn btn-danger rounded-pill">Yes, Delete</button>
+    <a asp-action="Index" class="btn btn-secondary rounded-pill ms-2">Cancel</a>
+}

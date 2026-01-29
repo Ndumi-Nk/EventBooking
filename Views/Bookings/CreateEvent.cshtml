@@ -1,0 +1,225 @@
+﻿@model EventBooking.ViewModels.CreateBookingViewModel
+@{
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="text-primary fw-bold">Book Your Event</h2>
+
+        <a href="@Url.Action("Cart", "Bookings")" class="btn btn-outline-primary position-relative">
+            <i class="fas fa-shopping-cart me-2"></i> Cart
+            <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @((ViewBag.CartCount ?? 0).ToString())
+            </span>
+        </a>
+    </div>
+
+    @using (Html.BeginForm("AddEventToCart", "Bookings", FormMethod.Post, new { id = "bookingForm" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.EventId)
+
+        <input type="hidden" id="hiddenEventType" name="EventType" value="" />
+
+        <!-- Event Types -->
+        <div class="mb-4">
+            <h5 class="fw-semibold mb-3">Select Event Type *</h5>
+            <div class="d-flex flex-wrap gap-3">
+                @foreach (var e in Enum.GetValues(typeof(EventBooking.Models.EventType)).Cast<EventBooking.Models.EventType>())
+                {
+                    <div class="event-card p-3 text-center shadow-sm" data-value="@e">
+                        <i class="bi bi-calendar-event display-4 text-primary mb-2"></i>
+                        <h6 class="mb-0">@e</h6>
+                    </div>
+                }
+            </div>
+            <div id="eventTypeError" class="text-danger mt-1" style="display:none;">
+                Please select an event type.
+            </div>
+        </div>
+
+        <!-- Start & End -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <label class="form-label fw-semibold">Start Date & Time *</label>
+                @Html.TextBoxFor(m => m.EventStartTime, new { @class = "form-control", id = "startPicker", placeholder = "Select start date & time" })
+                <div id="startError" class="text-danger mt-1" style="display:none;">Please select a valid start date & time.</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">End Date & Time *</label>
+                @Html.TextBoxFor(m => m.EventEndTime, new { @class = "form-control", id = "endPicker", placeholder = "Select end date & time" })
+                <div id="endError" class="text-danger mt-1" style="display:none;">End date must be after start date.</div>
+            </div>
+        </div>
+
+        <!-- People & Contact -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <label class="form-label fw-semibold">Number of People *</label>
+                @Html.TextBoxFor(m => m.NumberOfPeople, new { @class = "form-control", type = "number", min = 1, id = "peopleInput" })
+                <div id="peopleError" class="text-danger mt-1" style="display:none;">Enter at least 1 person.</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Contact Person *</label>
+                @Html.TextBoxFor(m => m.ContactPerson, new { @class = "form-control", id = "contactName", @readonly = "readonly" })
+                <div id="contactError" class="text-danger mt-1" style="display:none;">Please enter contact person.</div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Contact Phone *</label>
+                @Html.TextBoxFor(m => m.ContactPhone, new { @class = "form-control", id = "contactPhone", @readonly = "readonly" })
+                <div id="phoneError" class="text-danger mt-1" style="display:none;">Enter contact phone.</div>
+            </div>
+        </div>
+
+        <!-- Terms & Conditions -->
+        <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="termsCheckbox">
+            <label class="form-check-label" for="termsCheckbox">
+                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a>
+            </label>
+            <div id="termsError" class="text-danger mt-1" style="display:none;">You must accept the terms and conditions to proceed.</div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                <i class="bi bi-cart-plus me-2"></i> Add to Cart
+            </button>
+        </div>
+    }
+
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms & Conditions </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>This is a demo Terms & Conditions. Please replace with your actual terms.</p>
+                <ul>
+                    <li>All bookings must be confirmed 48 hours prior to event start.</li>
+                    <li>Cancellations must be done at least 24 hours in advance.</li>
+                    <li>Full payment is required for confirmed bookings.</li>
+                    <li>The organizer is not responsible for personal items lost at the venue.</li>
+                </ul>
+                <p>By agreeing, you confirm that you have read and accepted these terms.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
+    <style>
+        .event-card {
+            cursor: pointer;
+            border-radius: 0.8rem;
+            transition: 0.3s;
+            width: 150px;
+            background: #f8f9fa;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+            .event-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            }
+
+            .event-card.selected {
+                border: 3px solid #0d6efd;
+                background: #e7f1ff;
+            }
+
+        #cartCountBadge {
+            font-size: 0.8rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        $(document).ready(function () {
+            const cards = $(".event-card");
+            const hiddenEventType = $("#hiddenEventType");
+
+            // Event type card click
+            cards.click(function () {
+                cards.removeClass("selected");
+                $(this).addClass("selected");
+                hiddenEventType.val($(this).data("value"));
+                $("#eventTypeError").hide();
+            });
+
+            // Flatpickr date pickers (no default date)
+            flatpickr("#startPicker", { enableTime: true, dateFormat: "Y-m-d H:i", minDate: "today", time_24hr: true, defaultDate: null });
+            flatpickr("#endPicker", { enableTime: true, dateFormat: "Y-m-d H:i", minDate: "today", time_24hr: true, defaultDate: null });
+
+            // Form submit with validation
+            $("#bookingForm").submit(function (e) {
+                e.preventDefault();
+                let valid = true;
+
+                if (!hiddenEventType.val() || hiddenEventType.val().trim() === "") {
+                    $("#eventTypeError").show();
+                    valid = false;
+                }
+
+                const startVal = new Date($("#startPicker").val());
+                const endVal = new Date($("#endPicker").val());
+                if (isNaN(startVal.getTime())) { $("#startError").show(); valid = false; } else $("#startError").hide();
+                if (isNaN(endVal.getTime()) || endVal <= startVal) { $("#endError").show(); valid = false; } else $("#endError").hide();
+
+                const people = parseInt($("#peopleInput").val());
+                if (isNaN(people) || people < 1) { $("#peopleError").show(); valid = false; } else $("#peopleError").hide();
+
+                if (!$("#contactName").val().trim()) { $("#contactError").show(); valid = false; } else $("#contactError").hide();
+                if (!$("#contactPhone").val().trim()) { $("#phoneError").show(); valid = false; } else $("#phoneError").hide();
+
+                if (!$("#termsCheckbox").is(":checked")) {
+                    $("#termsError").show();
+                    valid = false;
+                } else {
+                    $("#termsError").hide();
+                }
+
+                if (valid) {
+                    var token = $('input[name="__RequestVerificationToken"]').val();
+                    $.ajax({
+                        url: $(this).attr("action"),
+                        type: "POST",
+                        data: $(this).serialize(),
+                        headers: { "RequestVerificationToken": token },
+                        success: function (response) {
+                            alert(response.message);
+                            if (response.success) {
+                                $("#cartCountBadge").text(response.cartCount);
+                                $("#bookingForm")[0].reset();
+                                cards.removeClass("selected");
+                                hiddenEventType.val("");
+                                $("#termsCheckbox").prop("checked", false);
+                            }
+                        },
+                        error: function (xhr) {
+                            let msg = "Unexpected error.";
+                            if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                            alert(msg);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

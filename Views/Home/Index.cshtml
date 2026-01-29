@@ -1,0 +1,214 @@
+﻿@model List<EventBooking.Models.Event>
+@using System.Globalization
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    ViewData["Title"] = "Home - ExtremeEvents";
+    Layout = "_Layout";
+
+    // Read EventCart
+    var eventCartJson = HttpContextAccessor.HttpContext.Session.GetString("EventCart");
+    var eventCart = string.IsNullOrEmpty(eventCartJson)
+        ? new List<EventBooking.Models.Booking>()
+        : Newtonsoft.Json.JsonConvert.DeserializeObject<List<EventBooking.Models.Booking>>(eventCartJson);
+
+    // Read CateringCart
+    var cateringCartJson = HttpContextAccessor.HttpContext.Session.GetString("CateringCart");
+    var cateringCart = string.IsNullOrEmpty(cateringCartJson)
+        ? new List<EventBooking.Models.BookingCatering>()
+        : Newtonsoft.Json.JsonConvert.DeserializeObject<List<EventBooking.Models.BookingCatering>>(cateringCartJson);
+
+    // Read CateringCart
+    var serviceCartJson = HttpContextAccessor.HttpContext.Session.GetString("ServiceCart");
+    var serviceCart = string.IsNullOrEmpty(serviceCartJson)
+        ? new List<EventBooking.Models.BookingCatering>()
+        : Newtonsoft.Json.JsonConvert.DeserializeObject<List<EventBooking.Models.BookingCatering>>(cateringCartJson);
+
+    // Combine counts
+    int cartCount = (eventCart?.Count ?? 0) + (cateringCart?.Count ?? 0) + (serviceCart?.Count ?? 0);
+
+    bool isAuthenticated = User.Identity.IsAuthenticated;
+
+    // Sorting & searching
+    string sortOrder = HttpContextAccessor.HttpContext.Request.Query["sort"];
+    string searchPlace = HttpContextAccessor.HttpContext.Request.Query["place"];
+
+    var venues = Model.AsQueryable();
+
+    if (!string.IsNullOrEmpty(searchPlace))
+    {
+        venues = venues.Where(v => v.Venue.Contains(searchPlace, StringComparison.OrdinalIgnoreCase));
+    }
+
+    venues = sortOrder switch
+    {
+        "price_asc" => venues.OrderBy(v => v.PricePerPerson),
+        "price_desc" => venues.OrderByDescending(v => v.PricePerPerson),
+        _ => venues
+    };
+}
+
+<!-- Cart Placeholder -->
+<div class="container py-3">
+    <div class="d-flex justify-content-end">
+        @using (Html.BeginForm("Cart", "Bookings", FormMethod.Get, new { @onsubmit = !isAuthenticated ? "window.location.href='" + Url.Action("Login", "Account") + "'; return false;" : "" }))
+        {
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-shopping-cart me-1"></i> Cart (@cartCount)
+            </button>
+        }
+    </div>
+</div>
+@* @using (Html.BeginForm("DeleteAll", "Packages", FormMethod.Post, new { onsubmit = "return confirm('Are you sure you want to delete all packages?');", style = "display:inline;" }))
+{
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Delete All Packages</button>
+}
+ *@
+
+
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-3">Book Your Perfect Venue</h1>
+        <p class="lead mb-4">Professional venue management for weddings, corporate events, parties, and more.</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="#venues" class="btn btn-light btn-lg px-4 py-2">
+                <i class="fas fa-map-marker-alt me-2"></i> Browse Venues
+            </a>
+            <a href="@Url.Action("Contact", "Home")" class="btn btn-outline-light btn-lg px-4 py-2">
+                <i class="fas fa-phone me-2"></i> Contact Us
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Venues Section -->
+<section id="venues" class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Featured Venues</h2>
+            <a href="@Url.Action("Index", "Events")" class="btn btn-outline-primary">
+                View All Venues <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+
+        <!-- Filters -->
+        <form method="get" class="row mb-4 g-2">
+            <div class="col-md-6">
+                <input type="text" name="place" class="form-control" placeholder="Search by place..." value="@searchPlace" />
+            </div>
+            <div class="col-md-4">
+                <select name="sort" class="form-select" onchange="this.form.submit()">
+                    <option value="">Sort by</option>
+                    <option value="price_asc" @(sortOrder == "price_asc" ? "selected" : "")>Price: Low to High</option>
+                    <option value="price_desc" @(sortOrder == "price_desc" ? "selected" : "")>Price: High to Low</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+
+        @if (venues.Any())
+        {
+            <div class="row g-4">
+                @foreach (var venue in venues.Take(6))
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            @if (!string.IsNullOrEmpty(venue.ImagePath))
+                            {
+                                <img src="@venue.ImagePath" class="card-img-top" alt="@venue.EventName" style="height:200px; object-fit:cover;">
+                            }
+                            else
+                            {
+                                <img src="/images/venue-placeholder.jpg" class="card-img-top" alt="Venue Image" style="height:200px; object-fit:cover;">
+                            }
+
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@venue.EventName</h5>
+                                <p class="card-text text-muted flex-grow-1">@venue.Description</p>
+
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i> @venue.Venue
+                                    </small>
+                                </div>
+                                <div class="mb-3">
+                                    <span class="fw-bold">
+                                        @venue.PricePerPerson.ToString("C", CultureInfo.GetCultureInfo("en-ZA")) <small>/person</small>
+                                    </span>
+                                </div>
+
+                                @using (Html.BeginForm("CreateEvent", "Bookings", FormMethod.Post, new { @onsubmit = !isAuthenticated ? "window.location.href='" + Url.Action("Login", "Account") + "'; return false;" : "" }))
+                                {
+                                    @Html.Hidden("eventId", venue.EventId)
+                                    <button type="submit" class="btn btn-primary mt-auto">
+                                        <i class="fas fa-calendar-plus me-1"></i> Book Now
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No venues available at the moment</h4>
+                <p class="text-muted">Please check back later for new venues</p>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-5 bg-dark text-white">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h3 class="fw-bold">@(Model?.Count ?? 0)</h3>
+                <p class="text-light">Available Venues</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fw-bold">500+</h3>
+                <p class="text-light">Successful Bookings</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fw-bold">50+</h3>
+                <p class="text-light">Professional Staff</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fw-bold">24/7</h3>
+                <p class="text-light">Customer Support</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Extra Info Section -->
+<section class="py-5">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-4">Why Choose VenueBooking Pro?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <i class="fas fa-check-circle fa-3x text-primary mb-3"></i>
+                <h5 class="fw-bold">Trusted by Thousands</h5>
+                <p class="text-muted">Our platform powers thousands of successful events across South Africa every year.</p>
+            </div>
+            <div class="col-md-4">
+                <i class="fas fa-wallet fa-3x text-primary mb-3"></i>
+                <h5 class="fw-bold">Affordable Pricing</h5>
+                <p class="text-muted">Competitive per-person pricing with flexible packages for any type of event.</p>
+            </div>
+            <div class="col-md-4">
+                <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                <h5 class="fw-bold">Dedicated Support</h5>
+                <p class="text-muted">Our customer success team is always ready to help you plan your dream event.</p>
+            </div>
+        </div>
+    </div>
+</section>

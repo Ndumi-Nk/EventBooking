@@ -1,0 +1,36 @@
+﻿@model EventBooking.Models.CustomDecoration
+
+@{
+    ViewData["Title"] = Model.DecorationId == 0 ? "Add Decoration" : "Edit Decoration";
+    Layout = "_Layout";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Name, new { @class = "form-label fw-semibold" })
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Decoration Name" })
+        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Description, new { @class = "form-label fw-semibold" })
+        @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 4, placeholder = "Description" })
+        @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.ImageUrl, new { @class = "form-label fw-semibold" })
+        @Html.TextBoxFor(m => m.ImageUrl, new { @class = "form-control", placeholder = "Image URL" })
+        @Html.ValidationMessageFor(m => m.ImageUrl, "", new { @class = "text-danger" })
+    </div>
+
+    <button type="submit" class="btn btn-primary rounded-pill">
+        @(Model.DecorationId == 0 ? "Add Decoration" : "Update Decoration")
+    </button>
+    <a asp-action="Index" class="btn btn-secondary rounded-pill ms-2">Cancel</a>
+}

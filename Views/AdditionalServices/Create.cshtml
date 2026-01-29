@@ -1,0 +1,52 @@
+﻿@model EventBooking.Models.AdditionalService
+@{
+    ViewData["Title"] = "Add Decoration Service";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <h2>Add New Decoration Service</h2>
+    <hr />
+
+    @using (Html.BeginForm("Create", "AdditionalServices", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.ServiceName, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.ServiceName, new { @class = "form-control", placeholder = "Enter service name" })
+            @Html.ValidationMessageFor(m => m.ServiceName, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Description, new { @class = "form-label" })
+            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 3, placeholder = "Enter description" })
+            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Price, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Price, new { @class = "form-control", type = "number", step = "0.01", placeholder = "Enter price" })
+            @Html.ValidationMessageFor(m => m.Price, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.PriceType, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.PriceType, new SelectList(new[] { "Fixed", "PerPerson", "PerHour" }), "Select type", new { @class = "form-select" })
+            @Html.ValidationMessageFor(m => m.PriceType, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3 form-check">
+            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "IsActive" })
+            @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label" })
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Upload Image</label>
+            <input type="file" name="ImageFile" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Service</button>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+    }
+</div>

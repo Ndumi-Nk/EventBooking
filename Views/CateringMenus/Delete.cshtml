@@ -1,0 +1,25 @@
+﻿@model EventBooking.Models.CateringMenu
+@{
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="card-title text-danger fw-bold">Delete Catering Menu</h3>
+            <p>Are you sure you want to delete the menu: <strong>@Model.MenuName</strong>?</p>
+
+            @using (Html.BeginForm("DeleteConfirmed", "CateringMenus", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.MenuId)
+                <button type="submit" class="btn btn-danger me-2">
+                    <i class="bi bi-trash"></i> Yes, Delete
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Cancel
+                </a>
+            }
+        </div>
+    </div>
+</div>

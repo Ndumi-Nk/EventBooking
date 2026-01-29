@@ -1,0 +1,223 @@
+﻿@model List<EventBooking.Models.Booking>
+@using System.Globalization
+@{
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <h2 class="mb-4 text-primary fw-bold">My Venue Bookings</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info rounded-3 shadow-sm text-center">
+            <i class="bi bi-info-circle me-2"></i>No bookings found.
+        </div>
+    }
+    else
+    {
+        <!-- Filters -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <input type="text" id="searchName" class="form-control" placeholder="Search Venue" />
+            </div>
+            <div class="col-md-2">
+                <select id="statusFilter" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Booking Cards -->
+        <div class="row g-4" id="bookingContainer">
+            @foreach (var b in Model)
+            {
+                var servicesTotal = (b.BookingServices?.Sum(s => s.AdditionalService?.PriceType == "Fixed" ? s.UnitPrice : s.TotalPrice) ?? 0);
+                var cateringTotal = b.BookingCaterings?.Sum(c => c.TotalPrice) ?? 0;
+                var total = b.TotalAmount + cateringTotal + servicesTotal;
+
+                <div class="col-12 booking-card p-0"
+                     data-name="@b.Event.Venue.ToLower()"
+                     data-status="@b.Status"
+                     data-start="@b.EventStartTime.ToString("yyyy-MM-dd")"
+                     data-end="@b.EventEndTime.ToString("yyyy-MM-dd")"
+                     data-total="@total">
+                    <div class="card shadow-sm border-0">
+                        <!-- Card Header -->
+                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                            <div>
+                                <h5 class="mb-0">@b.Event.Venue</h5>
+                                <small>@b.EventStartTime.ToString("f", CultureInfo.CurrentCulture) - @b.EventEndTime.ToString("f", CultureInfo.CurrentCulture)</small>
+                            </div>
+                            <div>
+                                <span class="badge
+                                    @(b.Status == EventBooking.Models.BookingStatus.Pending ? "bg-warning text-dark" :
+                                      b.Status == EventBooking.Models.BookingStatus.Approved ? "bg-success" :
+                                      b.Status == EventBooking.Models.BookingStatus.Paid ? "bg-primary" : "bg-danger")">
+                                    @b.Status
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div><strong>People:</strong> @b.NumberOfPeople</div>
+                                <div><strong>Total:</strong> @total.ToString("C", CultureInfo.CurrentCulture)</div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mb-3">
+                                @using (Html.BeginForm("Details", "Bookings", FormMethod.Get, new { @class = "d-inline" }))
+                                {
+                                    @Html.Hidden("id", b.BookingId)
+                                    <button type="submit" class="btn btn-sm btn-outline-info me-1 mb-1">
+                                        <i class="bi bi-eye"></i> Details
+                                    </button>
+                                }
+@using (Html.BeginForm("CancelBooking", "Bookings", FormMethod.Post, new { @class = "d-inline" }))
+{
+    @Html.AntiForgeryToken() <!-- CSRF protection -->
+
+    @Html.Hidden("id", b.BookingId) <!-- Must match the controller parameter name -->
+
+    @if (b.Status == EventBooking.Models.BookingStatus.Pending || b.Status == EventBooking.Models.BookingStatus.Approved)
+    {
+        <button type="submit" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="return confirm('Are you sure you want to cancel this booking?');">
+            <i class="bi bi-x-circle"></i> Cancel
+        </button>
+    }
+}
+
+                                @if (b.Status == EventBooking.Models.BookingStatus.Approved)
+                                {
+                                    var isPaid = b.Payments != null && b.Payments.Any(p => p.Status == EventBooking.Models.PaymentStatus.Completed);
+
+                                    if (!isPaid)
+                                    {
+                                        @using (Html.BeginForm("Create", "Payment", FormMethod.Post))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("BookingId", b.BookingId)
+                                            @Html.Hidden("Amount", total) <!-- Use total including services/catering -->
+                                            @Html.Hidden("EventName", b.Event.EventName)
+                                            @Html.Hidden("CustomerName", $"{b.User.FirstName} {b.User.LastName}")
+
+                                            <button type="submit" class="btn btn-sm btn-outline-primary mb-1">
+                                                <i class="bi bi-credit-card"></i> Make Payment
+                                            </button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Paid</span>
+                                    }
+                                }
+                            </div>
+
+                            <!-- Catering -->
+                            @if (b.BookingCaterings != null && b.BookingCaterings.Any())
+                            {
+                                <div class="mb-2">
+                                    <strong>Catering:</strong>
+                                    <ul class="list-group list-group-flush mt-1">
+                                        @foreach (var c in b.BookingCaterings)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between p-1">
+                                                <span>@c.CateringMenu.MenuName (x@(c.Quantity))</span>
+                                                <span>@c.TotalPrice.ToString("C", CultureInfo.CurrentCulture)</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <!-- Decoration Services -->
+                            @if (b.BookingServices != null && b.BookingServices.Any())
+                            {
+                                <div class="mb-2">
+                                    <strong>Decoration Services:</strong>
+                                    <ul class="list-group list-group-flush mt-1">
+                                        @foreach (var s in b.BookingServices)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between p-1">
+                                                <span>@s.AdditionalService?.ServiceName @(s.AdditionalService?.PriceType == "Fixed" ? "" : $"(x{s.Quantity})")</span>
+                                                <span>@(s.AdditionalService?.PriceType == "Fixed" ? s.UnitPrice.ToString("C", CultureInfo.CurrentCulture) : s.TotalPrice.ToString("C", CultureInfo.CurrentCulture))</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+      @*   <!-- Grand Total -->
+        <div class="mt-4 text-end fw-bold fs-5">
+            Grand Total: <span id="grandTotal"></span>
+        </div> *@
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const culture = '@CultureInfo.CurrentCulture.Name';
+        const currency = '@CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol';
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat(culture, { style: 'currency', currency: currency }).format(amount);
+        }
+
+        function updateGrandTotal() {
+            let total = 0;
+            document.querySelectorAll('#bookingContainer .booking-card:not([style*="display: none"])')
+                .forEach(card => {
+                    total += parseFloat(card.dataset.total);
+                });
+            document.getElementById('grandTotal').textContent = formatCurrency(total);
+        }
+
+        function filterBookings() {
+            const name = document.getElementById('searchName').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+
+            document.querySelectorAll('#bookingContainer .booking-card').forEach(card => {
+                const cardName = card.dataset.name;
+                const cardStatus = card.dataset.status;
+                const cardStart = card.dataset.start;
+                const cardEnd = card.dataset.end;
+
+                let show = true;
+                if (name && !cardName.includes(name)) show = false;
+                if (status && cardStatus !== status) show = false;
+                if (start && cardStart < start) show = false;
+                if (end && cardEnd > end) show = false;
+
+                card.style.display = show ? '' : 'none';
+            });
+
+            updateGrandTotal();
+        }
+
+        ['searchName', 'statusFilter', 'startDate', 'endDate'].forEach(id => {
+            document.getElementById(id).addEventListener('input', filterBookings);
+            document.getElementById(id).addEventListener('change', filterBookings);
+        });
+
+        // Initialize grand total
+        updateGrandTotal();
+    </script>
+}

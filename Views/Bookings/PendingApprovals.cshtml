@@ -1,0 +1,244 @@
+﻿@model List<EventBooking.Models.Booking>
+@using System.Globalization
+@{
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <h2 class="mb-4 text-primary fw-bold">Pending Venue Bookings</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info rounded-3 shadow-sm text-center">
+            <i class="bi bi-info-circle me-2"></i>No pending bookings at the moment.
+        </div>
+    }
+    else
+    {
+        <!-- Filters -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <input type="text" id="searchVenue" class="form-control" placeholder="Search Venue" />
+            </div>
+            <div class="col-md-3">
+                <input type="text" id="searchUser" class="form-control" placeholder="Search User" />
+            </div>
+            <div class="col-md-2">
+                <select id="statusFilter" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Booking Cards -->
+        <div class="row g-4" id="bookingContainer">
+            @foreach (var b in Model)
+            {
+                var cateringTotal = b.BookingCaterings?.Sum(c => c.TotalPrice) ?? 0;
+                var servicesTotal = b.BookingServices?.Sum(s => s.AdditionalService?.PriceType == "Fixed" ? s.UnitPrice : s.TotalPrice) ?? 0;
+                var total = b.TotalAmount + cateringTotal + servicesTotal;
+
+                <div class="col-12 booking-card p-0 border rounded shadow-sm"
+                     data-venue="@b.Event.Venue.ToLower()"
+                     data-user="@b.User.UserName.ToLower()"
+                     data-status="@b.Status"
+                     data-start="@b.EventStartTime.ToString("yyyy-MM-dd")"
+                     data-end="@b.EventEndTime.ToString("yyyy-MM-dd")"
+                     data-total="@total">
+
+                    <div class="card border-0">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                            <div>
+                                <h5 class="mb-0">@b.Event.Venue</h5>
+                                <small>@b.EventStartTime.ToString("f", CultureInfo.CurrentCulture) - @b.EventEndTime.ToString("f", CultureInfo.CurrentCulture)</small><br />
+                                <small>User: @b.User.UserName</small>
+                            </div>
+                            <div>
+                                <span class="badge
+                                                    @(b.Status == EventBooking.Models.BookingStatus.Pending ? "bg-warning text-dark" :
+                                                                                                                  b.Status == EventBooking.Models.BookingStatus.Approved ? "bg-success" :
+                                                                                                                  b.Status == EventBooking.Models.BookingStatus.Paid ? "bg-primary" : "bg-danger")">
+                            @b.Status
+                        </span>
+                    </div>
+                </div>
+
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div><strong>People:</strong> @b.NumberOfPeople</div>
+                                <div><strong>Total:</strong> @total.ToString("C", CultureInfo.CurrentCulture)</div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mb-3 d-flex flex-wrap gap-2">
+                                <!-- Approve Form -->
+                        @using (Html.BeginForm("ApproveBooking", "Bookings", FormMethod.Post, new { @class = "d-inline approveForm" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("id", b.BookingId)
+                                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal-@b.BookingId">
+                                        <i class="bi bi-check2-circle"></i> Approve
+                                    </button>
+                                }
+
+                                <!-- Cancel Form -->
+                                @using (Html.BeginForm("CancelBooking", "Bookings", FormMethod.Post, new { @class = "d-inline cancelForm" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("id", b.BookingId)
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal-@b.BookingId">
+                                        <i class="bi bi-x-circle"></i> Reject Booking
+                                    </button>
+                                }
+
+                                <!-- Details Form -->
+                                @using (Html.BeginForm("Details", "Bookings", FormMethod.Get, new { @class = "d-inline" }))
+                                {
+                                    @Html.Hidden("id", b.BookingId)
+                                    <button type="submit" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> Details
+                                    </button>
+                                }
+                            </div>
+
+                            <!-- Catering -->
+                            @if (b.BookingCaterings?.Any() == true)
+                            {
+                                <div class="mb-2">
+                                    <strong>Catering:</strong>
+                                    <ul class="list-group list-group-flush mt-1">
+                                        @foreach (var c in b.BookingCaterings)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between p-1">
+                                                <span>@c.CateringMenu?.MenuName (x@(c.Quantity))</span>
+                                                <span>@c.TotalPrice.ToString("C", CultureInfo.CurrentCulture)</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <!-- Decoration / Additional Services -->
+                            @if (b.BookingServices?.Any() == true)
+                            {
+                                <div class="mb-2">
+                                    <strong>Decoration Services:</strong>
+                                    <ul class="list-group list-group-flush mt-1">
+                                        @foreach (var s in b.BookingServices)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between p-1">
+                                                <span>@s.AdditionalService?.ServiceName @(s.AdditionalService?.PriceType == "Fixed" ? "" : $"(x{s.Quantity})")</span>
+                                                <span>@(s.AdditionalService?.PriceType == "Fixed" ? s.UnitPrice.ToString("C", CultureInfo.CurrentCulture) : s.TotalPrice.ToString("C", CultureInfo.CurrentCulture))</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approve Modal -->
+                <div class="modal fade" id="approveModal-@b.BookingId" tabindex="-1" aria-labelledby="approveModalLabel-@b.BookingId" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">Booking Approved</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Booking for <strong>@b.Event.Venue</strong> has been successfully approved.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="submitForm('@b.BookingId','approve')">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cancel Modal -->
+                <div class="modal fade" id="cancelModal-@b.BookingId" tabindex="-1" aria-labelledby="cancelModalLabel-@b.BookingId" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Booking Cancelled</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Booking for <strong>@b.Event.Venue</strong> has been successfully cancelled.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="submitForm('@b.BookingId','cancel')">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Submit form after modal OK
+        function submitForm(bookingId, action) {
+            let formClass = action === 'approve' ? '.approveForm' : '.cancelForm';
+            const form = document.querySelector(`${formClass} input[name="id"][value="${bookingId}"]`).closest('form');
+            if (form) form.submit();
+        }
+
+        // Filters and grand total
+        function updateGrandTotal() {
+            let total = 0;
+            document.querySelectorAll('#bookingContainer .booking-card:not([style*="display: none"])')
+                .forEach(card => total += parseFloat(card.dataset.total));
+            const grandTotalEl = document.getElementById('grandTotal');
+            if (grandTotalEl) grandTotalEl.textContent = total.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+        }
+
+        function filterBookings() {
+            const venue = document.getElementById('searchVenue').value.toLowerCase();
+            const user = document.getElementById('searchUser').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+
+            document.querySelectorAll('#bookingContainer .booking-card').forEach(card => {
+                const cardVenue = card.dataset.venue;
+                const cardUser = card.dataset.user;
+                const cardStatus = card.dataset.status;
+                const cardStart = card.dataset.start;
+                const cardEnd = card.dataset.end;
+
+                let show = true;
+                if (venue && !cardVenue.includes(venue)) show = false;
+                if (user && !cardUser.includes(user)) show = false;
+                if (status && cardStatus !== status) show = false;
+                if (start && cardStart < start) show = false;
+                if (end && cardEnd > end) show = false;
+
+                card.style.display = show ? '' : 'none';
+            });
+
+            updateGrandTotal();
+        }
+
+        ['searchVenue', 'searchUser', 'statusFilter', 'startDate', 'endDate'].forEach(id => {
+            document.getElementById(id).addEventListener('input', filterBookings);
+            document.getElementById(id).addEventListener('change', filterBookings);
+        });
+
+        updateGrandTotal();
+    </script>
+}

@@ -1,0 +1,126 @@
+﻿@model EventBooking.Controllers.AdminDashboardViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_Layout";
+
+    var culture = CultureInfo.CurrentCulture;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
+        <div class="btn-group">
+            @using (Html.BeginForm("Manage", "Events", FormMethod.Get))
+            {
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-calendar me-1"></i> Manage Events
+                </button>
+            }
+
+            @using (Html.BeginForm("PendingApprovals", "Bookings", FormMethod.Get))
+            {
+                <button type="submit" class="btn btn-outline-warning">
+                    <i class="fas fa-clock me-1"></i> Pending Approvals
+                </button>
+            }
+        </div>
+    </div>
+
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="dashboard-card text-center">
+                <div class="feature-icon mx-auto">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <h3 class="stat-number">@Model.TotalEvents.ToString("N0", culture)</h3>
+                <p class="text-muted">Total Events</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="dashboard-card text-center">
+                <div class="feature-icon mx-auto">
+                    <i class="fas fa-bookmark"></i>
+                </div>
+                <h3 class="stat-number">@Model.TotalBookings.ToString("N0", culture)</h3>
+                <p class="text-muted">Total Bookings</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="dashboard-card text-center">
+                <div class="feature-icon mx-auto">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="stat-number">@Model.PendingApprovals.ToString("N0", culture)</h3>
+                <p class="text-muted">Pending Approvals</p>
+            </div>
+        </div>
+      
+    </div>
+
+    <div class="row">
+        <!-- Recent Bookings -->
+        <div class="col-lg-8">
+            <div class="dashboard-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-history me-2"></i>Recent Bookings</h5>
+                    <a asp-controller="Admin" asp-action="AllBookings" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>People</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model.RecentBookings)
+                            {
+                                <tr>
+                                    <td>@booking.Event.EventName</td>
+                                    <td>@booking.User.FirstName @booking.User.LastName</td>
+                                    <td>@booking.BookingDate.ToString("d MMM yyyy", culture)</td>
+                                    <td>@booking.NumberOfPeople.ToString("N0", culture)</td>
+                                    <td>@booking.TotalAmount.ToString("C", culture)</td>
+                                    <td>
+                                        <span class="status-badge status-@booking.Status.ToString().ToLower()">
+                                            @booking.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="col-lg-4">
+            <div class="dashboard-card">
+                <h5 class="mb-3"><i class="fas fa-calendar-alt me-2"></i>Available Venues</h5>
+                <div class="list-group">
+                    @foreach (var eventItem in Model.UpcomingEvents)
+                    {
+                        <div class="list-group-item border-0">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@eventItem.EventName</h6>
+                            </div>
+                            <p class="mb-1 text-muted small">@eventItem.Venue</p>
+                            <small class="text-muted">Capacity: @eventItem.MaxCapacity.ToString("N0", culture)</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

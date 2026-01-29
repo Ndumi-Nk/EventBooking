@@ -1,0 +1,83 @@
+﻿@model IEnumerable<EventBooking.Models.AdditionalService>
+@{
+    ViewData["Title"] = "Decoration Services";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Decoration Services</h2>
+        @using (Html.BeginForm("Create", "AdditionalServices", FormMethod.Get))
+        {
+            <button type="submit" class="btn btn-primary">Add New Service</button>
+        }
+    </div>
+
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th style="width:250px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>
+                        @if (!string.IsNullOrEmpty(s.ImagePath))
+                        {
+                            <img src="@s.ImagePath" width="80" class="rounded" />
+                        }
+                        else
+                        {
+                            <span class="text-muted">No Image</span>
+                        }
+                    </td>
+                    <td>@s.ServiceName</td>
+                    <td>@s.Price.ToString("C")</td>
+                    <td>@s.PriceType</td>
+                    <td>
+                        @if (s.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactive</span>
+                        }
+                    </td>
+                    <td class="d-flex gap-1">
+                        <!-- View -->
+                        @using (Html.BeginForm("Details", "AdditionalServices", FormMethod.Get))
+                        {
+                            @Html.Hidden("id", s.ServiceId)
+                            <button type="submit" class="btn btn-sm btn-info">View</button>
+                        }
+
+                        <!-- Edit -->
+                        @using (Html.BeginForm("Edit", "AdditionalServices", FormMethod.Get))
+                        {
+                            @Html.Hidden("id", s.ServiceId)
+                            <button type="submit" class="btn btn-sm btn-warning">Edit</button>
+                        }
+
+                        <!-- Delete -->
+                        @using (Html.BeginForm("Delete", "AdditionalServices", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.Hidden("id", s.ServiceId)
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this service?');">
+                                Delete
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

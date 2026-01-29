@@ -1,0 +1,137 @@
+﻿@model EventBooking.Models.Payments
+
+@{
+    ViewData["Title"] = "Make Payment";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h4 class="mb-0 fw-bold">Payment for @Model.Booking.Package.PackageName</h4>
+        </div>
+
+        <div class="card-body">
+            <p class="text-center fs-5 mb-4"><strong>Amount:</strong> @Model.Amount.ToString("C")</p>
+
+            @using (Html.BeginForm("Pay", "Payments", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.PackageBookingId)
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Payment Type</label>
+                    @Html.DropDownListFor(m => m.SelectedPaymentType,
+                    new SelectList(new List<string> { "Credit Card", "EFT", "PayPal" }),
+                                "-- Select Payment Type --",
+                                new { @class = "form-select", id = "paymentType", required = "required" })
+                @Html.ValidationMessageFor(m => m.SelectedPaymentType, "", new { @class = "text-danger" })
+            </div>
+
+            <div id="cardFields">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Cardholder Name</label>
+                    @Html.TextBoxFor(m => m.CardHolderName, new { @class = "form-control", placeholder = "John Doe" })
+                    @Html.ValidationMessageFor(m => m.CardHolderName, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Card Number</label>
+                    @Html.TextBoxFor(m => m.CardNumber, new { @class = "form-control", maxlength = "16", placeholder = "1234 5678 9012 3456" })
+                    @Html.ValidationMessageFor(m => m.CardNumber, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Expiry Date (MM/YY)</label>
+                        @Html.TextBoxFor(m => m.ExpiryDate, new { @class = "form-control", maxlength = "5", placeholder = "MM/YY" })
+                        @Html.ValidationMessageFor(m => m.ExpiryDate, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">CVV</label>
+                        @Html.TextBoxFor(m => m.CVV, new { @class = "form-control", maxlength = "3", placeholder = "123" })
+                        @Html.ValidationMessageFor(m => m.CVV, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success rounded-pill w-100 mt-3">
+                <i class="bi bi-credit-card-fill me-1"></i> Pay Now
+            </button>
+                        }
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const paymentType = document.getElementById("paymentType");
+            const cardFields = document.getElementById("cardFields");
+
+            function toggleCardFields() {
+                cardFields.style.display = paymentType.value === "Credit Card" ? "block" : "none";
+            }
+
+            paymentType.addEventListener("change", toggleCardFields);
+            toggleCardFields();
+        });
+    </script>
+}
+@section Styles {
+    <style>
+        /* Card styling */
+        .card {
+            border-radius: 15px;
+        }
+
+        .card-header h4 {
+            font-weight: bold;
+        }
+
+        /* Label + Input */
+        .form-label {
+            font-weight: 600;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            padding: 0.6rem 0.75rem;
+        }
+
+            .form-control:focus,
+            .form-select:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+            }
+
+        /* Button styling */
+        .btn-success {
+            padding: 0.65rem 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: 0.3s ease-in-out;
+        }
+
+            .btn-success:hover {
+                background-color: #157347;
+                transform: translateY(-1px);
+            }
+
+        /* Validation error */
+        .text-danger {
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        /* Responsive */
+        @@media (max-width: 576px) {
+            .container
+
+        {
+            padding: 0 1rem;
+        }
+
+        }
+    </style>
+}

@@ -1,0 +1,54 @@
+﻿@model EventBooking.Models.Event
+@{
+    ViewData["Title"] = "Create Event";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4">Create New Event</h1>
+
+    @using (Html.BeginForm("Create", "Events", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.EventName)
+            @Html.TextBoxFor(m => m.EventName, new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.EventName, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Description)
+            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 3 })
+            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+        </div>
+
+       
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Venue)
+            @Html.TextBoxFor(m => m.Venue, new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.Venue, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.MaxCapacity)
+            @Html.TextBoxFor(m => m.MaxCapacity, new { type = "number", @class = "form-control", min = "1", max = "1000" })
+            @Html.ValidationMessageFor(m => m.MaxCapacity, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.PricePerPerson)
+            @Html.TextBoxFor(m => m.PricePerPerson, new { type = "number", step = "0.01", @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.PricePerPerson, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.Label("Event Image")
+            <input type="file" name="eventImage" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Create Event</button>
+        <a asp-action="Manage" class="btn btn-secondary ms-2">Cancel</a>
+    }
+</div>

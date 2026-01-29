@@ -1,0 +1,253 @@
+﻿@model EventBooking.ViewModels.BookingDetailsViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Booking Details";
+    Layout = "_Layout";
+    var culture = CultureInfo.CurrentCulture;
+}
+
+<div class="container py-5">
+    @using (Html.BeginForm("MyBookings", "Bookings", FormMethod.Get))
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="fw-bold"><i class="fas fa-file-alt me-2"></i>Booking Details</h1>
+
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to My Bookings
+            </button>
+        </div>
+    }
+
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Booking Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Booking Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr><th>Event:</th><td>@Model.Booking.Event.EventName</td></tr>
+                                <tr><th>Venue:</th><td>@Model.Booking.Event.Venue</td></tr>
+                                <tr><th>Event Type:</th><td>@Model.Booking.Type</td></tr>
+                                <tr><th>Start Date & Time:</th><td>@Model.Booking.EventStartTime.ToString("MMM dd, yyyy HH:mm")</td></tr>
+                                <tr><th>End Date & Time:</th><td>@Model.Booking.EventEndTime.ToString("MMM dd, yyyy HH:mm")</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        <span class="status-badge status-@Model.Booking.Status.ToString().ToLower()">
+                                            @Model.Booking.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr><th>Booking Date:</th><td>@Model.Booking.BookingDate.ToString("MMM dd, yyyy")</td></tr>
+                                <tr><th>Contact Person:</th><td>@Model.ContactPerson</td></tr>
+                                <tr><th>Contact Phone:</th><td>@Model.ContactPhone</td></tr>
+
+                            </table>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Booking.SpecialRequirements))
+                    {
+                        <div class="alert alert-light mt-3">
+                            <strong>Special Requirements:</strong> @Model.Booking.SpecialRequirements
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Booking.AdminNotes))
+                    {
+                        <div class="alert alert-info mt-3">
+                            <strong>Admin Notes:</strong> @Model.Booking.AdminNotes
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Catering Details -->
+            @if (Model.CateringItems != null && Model.CateringItems.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-utensils me-2"></i>Catering Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Menu</th>
+                                        <th>Description</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.CateringItems)
+                                    {
+                                        <tr>
+                                            <td>@item.CateringMenu.MenuName</td>
+                                            <td>@item.CateringMenu.Description</td>
+                                            <td>@item.Quantity people</td>
+                                            <td>@item.UnitPrice.ToString("C", culture)</td>
+                                            <td>@item.TotalPrice.ToString("C", culture)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold">
+                                        <td colspan="4" class="text-end">Catering Total:</td>
+                                        <td>@Model.Booking.CateringCost.ToString("C", culture)</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Additional Services -->
+            @if (Model.AdditionalServices != null && Model.AdditionalServices.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Additional Services</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Description</th>
+                                        <th>Quantity/Hours</th>
+                                        <th>Unit Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var service in Model.AdditionalServices)
+                                    {
+                                        <tr>
+                                            <td>@service.AdditionalService.ServiceName</td>
+                                            <td>@service.AdditionalService.Description</td>
+                                            <td>
+                                                @if (service.AdditionalService.PriceType == "PerHour")
+                                                {
+                                                    @($"{service.Hours} hours")
+                                                }
+                                                else
+                                                {
+                                                    @service.Quantity
+                                                }
+                                            </td>
+                                            <td>@service.UnitPrice.ToString("C", culture)</td>
+                                            <td>@service.TotalPrice.ToString("C", culture)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold">
+                                        <td colspan="4" class="text-end">Services Total:</td>
+                                        <td>@Model.Booking.AdditionalServicesCost.ToString("C", culture)</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td>Base Amount (@Model.Booking.NumberOfPeople people):</td>
+                            <td class="text-end">@Model.Booking.BaseAmount.ToString("C", culture)</td>
+                        </tr>
+                        @if (Model.Booking.CateringCost > 0)
+                        {
+                            <tr>
+                                <td>Catering:</td>
+                                <td class="text-end">@Model.Booking.CateringCost.ToString("C", culture)</td>
+                            </tr>
+                        }
+                        @if (Model.Booking.AdditionalServicesCost > 0)
+                        {
+                            <tr>
+                                <td>Additional Services:</td>
+                                <td class="text-end">@Model.Booking.AdditionalServicesCost.ToString("C", culture)</td>
+                            </tr>
+                        }
+                        <tr class="border-top">
+                            <td class="fw-bold">Total Amount:</td>
+                            <td class="text-end fw-bold fs-5 text-primary">@Model.Booking.TotalAmount.ToString("C", culture)</td>
+                        </tr>
+                    </table>
+
+                    <div class="d-grid gap-2 mt-3">
+                        @if (Model.Booking.Status == EventBooking.Models.BookingStatus.Approved)
+                        {
+                            <a asp-controller="Payment" asp-action="Create" asp-route-bookingId="@Model.Booking.BookingId"
+                               class="btn btn-success">
+                                <i class="fas fa-credit-card me-1"></i>Make Payment
+                            </a>
+                        }
+
+                        @if (Model.Booking.Status == EventBooking.Models.BookingStatus.Pending || Model.Booking.Status == EventBooking.Models.BookingStatus.Approved)
+                        {
+                            <form asp-action="CancelBooking" method="post" class="d-grid mt-2">
+                                <input type="hidden" name="id" value="@Model.Booking.BookingId" />
+                                <button type="submit" class="btn btn-outline-danger"
+                                        onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                    <i class="fas fa-times me-1"></i>Cancel Booking
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            @if (Model.Payments != null && Model.Payments.Any())
+            {
+                <div class="card mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Payment History</h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var payment in Model.Payments)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                <div>
+                                    <small class="fw-bold">@payment.Amount.ToString("C", culture)</small><br>
+                                    <small class="text-muted">@payment.PaymentMethod</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">@payment.PaymentDate.ToString("MMM dd, yyyy HH:mm")</small><br>
+                                    <span class="badge bg-@(payment.Status == EventBooking.Models.PaymentStatus.Completed ? "success" : "warning")">
+                                        @payment.Status
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

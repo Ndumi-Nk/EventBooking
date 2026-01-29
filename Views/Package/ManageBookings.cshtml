@@ -1,0 +1,101 @@
+﻿@model IEnumerable<EventBooking.Models.PackageBooking>
+
+@{
+    ViewData["Title"] = "Manage Package Bookings";
+    Layout = "_Layout";
+}
+
+<h2 class="mb-3">Manage Package Bookings</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="mb-3">
+    <label for="statusFilter" class="form-label fw-bold">Filter by Status:</label>
+    <select id="statusFilter" class="form-select" onchange="filterBookings()">
+        <option value="All">-- All --</option>
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="Declined">Declined</option>
+    </select>
+</div>
+
+<table id="bookingTable" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Event</th>
+            <th>Package</th>
+            <th>Booked By</th>
+            <th>Date</th>
+            <th>People</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var booking in Model)
+        {
+            <tr>
+                <td>@booking.Package.Event.EventName</td>
+                <td>@booking.Package.PackageName</td>
+                <td>@booking.ContactName (@booking.ContactEmail)</td>
+                <td>@booking.BookingDate.ToShortDateString()</td>
+                <td>@booking.NumberOfPeople</td>
+                <td class="status-cell">
+                    <span class="badge @(booking.Status == EventBooking.Models.BookingStatuss.Pending ? "bg-warning" :
+                                                                  booking.Status == EventBooking.Models.BookingStatuss.Approved ? "bg-success" : "bg-danger")">
+                    @booking.Status
+                </span>
+            </td>
+            <td>
+                @if (booking.Status == EventBooking.Models.BookingStatuss.Pending)
+                    {
+                        @using (Html.BeginForm("UpdateStatus", "Package", FormMethod.Post, new { @class = "d-inline" }))
+                        {
+                            @Html.Hidden("id", booking.PackageBookingId)
+                            @Html.Hidden("status", "Approved")
+                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                        }
+
+                        @using (Html.BeginForm("UpdateStatus", "Package", FormMethod.Post, new { @class = "d-inline" }))
+                        {
+                            @Html.Hidden("id", booking.PackageBookingId)
+                            @Html.Hidden("status", "Declined")
+                            <button type="submit" class="btn btn-sm btn-danger">Decline</button>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">No actions available</span>
+                    }
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        function filterBookings() {
+            var filter = document.getElementById("statusFilter").value;
+            var table = document.getElementById("bookingTable");
+            var rows = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < rows.length; i++) { // skip header row
+                var statusCell = rows[i].querySelector(".status-cell");
+                if (!statusCell) continue;
+
+                var statusText = statusCell.innerText.trim();
+
+                if (filter === "All" || statusText === filter) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+}

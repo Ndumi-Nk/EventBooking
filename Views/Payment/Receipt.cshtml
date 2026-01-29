@@ -1,0 +1,142 @@
+﻿@model EventBooking.ViewModels.PaymentViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Payment Receipt";
+    Layout = "_Layout";
+
+    var saCulture = new CultureInfo("en-ZA");
+}
+
+<style>
+    @@media print {
+        body *
+
+    {
+        visibility: hidden;
+    }
+
+    #receipt, #receipt * {
+        visibility: visible;
+    }
+
+    #receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .no-print {
+        display: none;
+    }
+
+    }
+
+    #receipt {
+        border: 2px solid #28a745;
+        border-radius: 10px;
+        padding: 30px;
+        background: #f8f9fa;
+    }
+
+        #receipt h4 {
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+    .receipt-section {
+        margin-bottom: 20px;
+    }
+
+        .receipt-section ul li {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #ccc;
+        }
+
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #28a745;
+        border-top: 2px solid #28a745;
+        padding-top: 10px;
+    }
+
+    .receipt-footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #555;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div id="receipt">
+                <h4><i class="fas fa-receipt me-2"></i>Payment Receipt</h4>
+
+                <div class="receipt-section">
+                    <p><strong>Event:</strong> @Model.EventName</p>
+                    <p><strong>Customer:</strong> @Model.CustomerName</p>
+                    <p><strong>Payment Method:</strong> @Model.PaymentMethod</p>
+                    <p><strong>Date:</strong> @DateTime.Now.ToString("dd MMM yyyy HH:mm")</p>
+                </div>
+
+                @if (Model.CateringItems.Any())
+                {
+                    <div class="receipt-section">
+                        <h6>Catering Items</h6>
+                        <ul class="list-unstyled">
+                            @foreach (var c in Model.CateringItems)
+                            {
+                                <li>@c.Name (@c.Quantity) <span>@c.TotalPrice.ToString("C", saCulture)</span></li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                @if (Model.ServiceItems.Any())
+                {
+                    <div class="receipt-section">
+                        <h6>Service Items</h6>
+                        <ul class="list-unstyled">
+                            @foreach (var s in Model.ServiceItems)
+                            {
+                                <li>@s.Name (@s.Quantity) <span>@s.TotalPrice.ToString("C", saCulture)</span></li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <div class="total-amount">
+                    Total Paid: @Model.Amount.ToString("C", saCulture)
+                </div>
+
+                <div class="receipt-footer">
+                    Thank you for your booking!<br />
+                    Generated on @DateTime.Now.ToString("dd MMM yyyy HH:mm")
+                </div>
+            </div>
+
+            <div class="mt-4 no-print d-flex justify-content-between">
+                <a asp-controller="Bookings" asp-action="MyBookings" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to My Bookings
+                </a>
+                <button class="btn btn-success" onclick="printReceipt();">
+                    <i class="fas fa-print me-1"></i>Print Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function printReceipt() {
+            window.print();
+        }
+    </script>
+}

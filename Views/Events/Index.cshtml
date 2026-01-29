@@ -1,0 +1,107 @@
+﻿@using System.Globalization
+@model List<EventBooking.Models.Event>
+
+@{
+    ViewData["Title"] = "All Events - EventBooking Pro";
+    Layout = "_Layout";
+
+    var culture = CultureInfo.CurrentCulture;
+    bool isAuthenticated = User.Identity.IsAuthenticated;
+
+    // 🔎 Get query params from request
+    var searchVenue = Context.Request.Query["searchVenue"].ToString();
+    var sortOrder = Context.Request.Query["sortOrder"].ToString();
+
+    // 🔍 Filter events by venue/place
+    var filteredEvents = string.IsNullOrEmpty(searchVenue)
+        ? Model
+        : Model.Where(e => !string.IsNullOrEmpty(e.Venue) &&
+                           e.Venue.Contains(searchVenue, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    // ⬆⬇ Sort by price
+    filteredEvents = sortOrder switch
+    {
+        "price_asc" => filteredEvents.OrderBy(e => e.PricePerPerson).ToList(),
+        "price_desc" => filteredEvents.OrderByDescending(e => e.PricePerPerson).ToList(),
+        _ => filteredEvents.OrderBy(e => e.EventName).ToList()
+    };
+}
+
+<div class="container py-5">
+
+    <!-- 🔍 Search & Sort Controls -->
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-md-4">
+            <input type="text" name="searchVenue" value="@searchVenue"
+                   class="form-control" placeholder="Search by venue..." />
+        </div>
+        <div class="col-md-3">
+            <select name="sortOrder" class="form-select" onchange="this.form.submit()">
+                <option value="">Sort by...</option>
+                <option value="price_asc" @(sortOrder == "price_asc" ? "selected" : "")>
+                    Price: Low to High
+                </option>
+                <option value="price_desc" @(sortOrder == "price_desc" ? "selected" : "")>
+                    Price: High to Low
+                </option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-search me-1"></i> Search
+            </button>
+        </div>
+    </form>
+
+    <!-- 🎉 Event Cards -->
+    <div class="row g-4">
+        @if (!filteredEvents.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-warning text-center">
+                    No events found for your filters.
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var eventItem in filteredEvents)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <div class="card event-card h-100">
+                        <img src="@(!string.IsNullOrEmpty(eventItem.ImagePath) ? eventItem.ImagePath : "/images/event-placeholder.jpg")"
+                             class="event-image" alt="@eventItem.EventName" />
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@eventItem.EventName</h5>
+                            <p class="card-text text-muted flex-grow-1">@eventItem.Description</p>
+
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                <small>@eventItem.Venue</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <span class="price-tag">
+                                    @eventItem.PricePerPerson.ToString("C", culture) <small>/person</small>
+                                </span>
+
+                                <button class="btn btn-primary"
+                                        onclick="@(isAuthenticated
+                                                                                    ? $"document.getElementById('form-{eventItem.EventId}').submit();"
+                                                                                    : $"window.location.href='{Url.Action("Login", "Account")}'")">
+                            <i class="fas fa-ticket-alt me-1"></i> Book Now
+                        </button>
+
+                        @using (Html.BeginForm("CreateEvent", "Bookings", FormMethod.Post, new { id = $"form-{eventItem.EventId}" }))
+                                {
+                                    @Html.Hidden("eventId", eventItem.EventId)
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

@@ -1,0 +1,89 @@
+﻿@model List<EventBooking.Models.CateringMenu>
+@{
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">Catering Menus</h2>
+        @using (Html.BeginForm("Create", "CateringMenus", FormMethod.Get))
+        {
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add New Menu
+            </button>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info rounded-3 shadow-sm">
+            No catering menus available.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-hover table-bordered align-middle mb-0">
+                <thead class="table-light text-uppercase">
+                    <tr>
+                        <th>Image</th>
+                        <th>Menu Name</th>
+                        <th>Price per Person</th>
+                        <th>Description</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var menu in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(menu.ImagePath))
+                                {
+                                    <img src="@menu.ImagePath" alt="@menu.MenuName" class="img-thumbnail" style="width:80px; height:80px; object-fit:cover;">
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No image</span>
+                                }
+                            </td>
+                            <td class="fw-semibold">@menu.MenuName</td>
+                            <td>@menu.PricePerPerson.ToString("C")</td>
+                            <td>@menu.Description</td>
+                            <td class="text-center">
+
+                                @* View *@
+                                @using (Html.BeginForm("Details", "CateringMenus", FormMethod.Get, new { @class = "d-inline" }))
+                                {
+                                    @Html.Hidden("id", menu.MenuId)
+                                    <button type="submit" class="btn btn-sm btn-info mb-1">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                }
+
+                                @* Edit *@
+                                @using (Html.BeginForm("Edit", "CateringMenus", FormMethod.Get, new { @class = "d-inline ms-1" }))
+                                {
+                                    @Html.Hidden("id", menu.MenuId)
+                                    <button type="submit" class="btn btn-sm btn-warning mb-1">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                }
+
+                                @* Delete *@
+                                @using (Html.BeginForm("Delete", "CateringMenus", FormMethod.Get, new { @class = "d-inline ms-1" }))
+                                {
+                                    @Html.Hidden("id", menu.MenuId)
+                                    <button type="submit" class="btn btn-sm btn-danger mb-1">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                }
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

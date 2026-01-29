@@ -1,0 +1,36 @@
+﻿@model EventBooking.Models.CateringMenu
+@{
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="card shadow-sm">
+        <div class="row g-0">
+            <div class="col-md-4">
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <img src="@Model.ImagePath" class="img-fluid rounded-start" alt="@Model.MenuName">
+                }
+                else
+                {
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height:100%;">
+                        <span class="text-muted">No Image</span>
+                    </div>
+                }
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h3 class="card-title fw-bold">@Model.MenuName</h3>
+                    <p class="card-text"><strong>Price per Person:</strong> @Model.PricePerPerson.ToString("C")</p>
+                    <p class="card-text"><strong>Description:</strong> @Model.Description</p>
+                    <a asp-action="Edit" asp-route-id="@Model.MenuId" class="btn btn-warning me-2">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

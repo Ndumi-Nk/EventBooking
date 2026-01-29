@@ -1,0 +1,96 @@
+﻿@{
+    ViewData["Title"] = "About Us";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center text-center mb-5">
+        <div class="col-lg-8">
+            <h1 class="fw-bold text-primary mb-3">About EventBooking</h1>
+            <p class="lead text-muted">
+                EventBooking is your trusted platform to discover and book the best venues and event packages in Durban and beyond.
+                We make event planning simple, professional, and seamless for both clients and venue owners.
+            </p>
+        </div>
+    </div>
+
+    <!-- Our Mission -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+            <img src="https://source.unsplash.com/600x400/?team,work,office" class="img-fluid rounded-4 shadow-sm" alt="Our Mission" />
+        </div>
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-3">Our Mission</h2>
+            <p>
+                To connect clients with top-quality venues and services, providing a hassle-free booking experience.
+                We aim to empower event planners with transparent information, reliable support, and innovative tools.
+            </p>
+        </div>
+    </div>
+
+    <!-- Our Vision -->
+    <div class="row align-items-center mb-5 flex-md-row-reverse">
+        <div class="col-md-6">
+            <img src="https://source.unsplash.com/600x400/?vision,planning,event" class="img-fluid rounded-4 shadow-sm" alt="Our Vision" />
+        </div>
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-3">Our Vision</h2>
+            <p>
+                To become the leading event booking platform in South Africa, known for reliability, professionalism, and exceptional customer experience.
+            </p>
+        </div>
+    </div>
+
+    <!-- Our Team -->
+    <div class="row justify-content-center mb-5 text-center">
+        <div class="col-lg-8">
+            <h2 class="fw-bold text-primary mb-4">Meet Our Team</h2>
+            <p class="text-muted mb-4">
+                A group of passionate professionals dedicated to making your events unforgettable.
+            </p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <img src="https://source.unsplash.com/400x400/?portrait,man" class="card-img-top rounded-top-4" alt="Team Member" />
+                <div class="card-body">
+                    <h5 class="fw-bold">Kwazi Siyanda</h5>
+                    <p class="text-muted mb-0">Founder & CEO</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <img src="https://source.unsplash.com/400x400/?portrait,woman" class="card-img-top rounded-top-4" alt="Team Member" />
+                <div class="card-body">
+                    <h5 class="fw-bold">Sibongile Dlamini</h5>
+                    <p class="text-muted mb-0">Head of Operations</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <img src="https://source.unsplash.com/400x400/?portrait,person" class="card-img-top rounded-top-4" alt="Team Member" />
+                <div class="card-body">
+                    <h5 class="fw-bold">Thabo Mthethwa</h5>
+                    <p class="text-muted mb-0">Marketing Lead</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row justify-content-center text-center">
+        <div class="col-lg-8">
+            <div class="p-5 bg-primary text-white rounded-4 shadow-lg">
+                <h3 class="fw-bold mb-3">Ready to plan your next event?</h3>
+                <p class="mb-4">Browse our venues and packages and make your booking today!</p>
+                <a href="@Url.Action("Browse", "Package")" class="btn btn-light btn-lg rounded-pill">
+                    Browse Packages
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,67 @@
+﻿@model EventBooking.ViewModels.PackageViewModel
+@{
+    ViewData["Title"] = "Create Package";
+    Layout = "_Layout";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">Create Package</h2>
+
+    @using (Html.BeginForm("Create", "Packages", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.PackageName, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.PackageName, new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.PackageName, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Description, new { @class = "form-label" })
+            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 3 })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.EventId, "Event", new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.EventId,
+            new SelectList(Model.Events, "EventId", "EventName"),
+                "-- Select Event --",
+                new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.EventId, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Catering Menus</label>
+        @Html.ListBoxFor(m => m.SelectedCateringIds,
+                new MultiSelectList(Model.CateringMenus, "MenuId", "MenuName"),
+                new { @class = "form-control", size = "5" })
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Additional Services</label>
+        @Html.ListBoxFor(m => m.SelectedServiceIds,
+                new MultiSelectList(Model.AdditionalServices, "ServiceId", "ServiceName"),
+                new { @class = "form-control", size = "5" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.TotalPrice, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.TotalPrice, new { @class = "form-control", type = "number", step = "0.01" })
+    </div>
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.ImageFile, "Upload Image", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.ImageFile, new { type = "file", @class = "form-control" })
+    </div>
+
+
+    <div class="form-check mb-3">
+        @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+        @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label" })
+    </div>
+
+    <button type="submit" class="btn btn-success">Save Package</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        }
+</div>

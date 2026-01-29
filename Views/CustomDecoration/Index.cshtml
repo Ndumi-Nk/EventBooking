@@ -1,0 +1,44 @@
+﻿@model IEnumerable<EventBooking.Models.CustomDecoration>
+
+@{
+    ViewData["Title"] = "My Decorations";
+    Layout = "_Layout";
+}
+
+<h2 class="mb-4">My Decorations</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<a asp-action="Create" class="btn btn-primary mb-3">Add New Decoration</a>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">You have not added any decorations yet.</div>
+}
+else
+{
+    <div class="row">
+        @foreach (var decoration in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm rounded-4">
+                    @if (!string.IsNullOrEmpty(decoration.ImageUrl))
+                    {
+                        <img src="@decoration.ImageUrl" class="card-img-top rounded-top-4" alt="@decoration.Name" />
+                    }
+                    <div class="card-body">
+                        <h5 class="fw-bold">@decoration.Name</h5>
+                        <p>@decoration.Description</p>
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Edit" asp-route-id="@decoration.DecorationId" class="btn btn-sm btn-warning">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@decoration.DecorationId" class="btn btn-sm btn-danger">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

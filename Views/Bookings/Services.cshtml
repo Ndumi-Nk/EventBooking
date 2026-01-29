@@ -1,0 +1,227 @@
+﻿@model List<EventBooking.Models.AdditionalService>
+@using EventBooking.Models
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Newtonsoft.Json
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Decorations & Services";
+    bool isAuthenticated = User.Identity.IsAuthenticated;
+
+    // Read Session Carts
+    var eventCart = string.IsNullOrEmpty(HttpContextAccessor.HttpContext.Session.GetString("EventCart"))
+        ? new List<Booking>()
+        : JsonConvert.DeserializeObject<List<Booking>>(HttpContextAccessor.HttpContext.Session.GetString("EventCart"));
+
+    var cateringCart = string.IsNullOrEmpty(HttpContextAccessor.HttpContext.Session.GetString("CateringCart"))
+        ? new List<BookingCatering>()
+        : JsonConvert.DeserializeObject<List<BookingCatering>>(HttpContextAccessor.HttpContext.Session.GetString("CateringCart"));
+
+    var serviceCart = string.IsNullOrEmpty(HttpContextAccessor.HttpContext.Session.GetString("ServiceCart"))
+        ? new List<BookingCatering>()
+        : JsonConvert.DeserializeObject<List<BookingCatering>>(HttpContextAccessor.HttpContext.Session.GetString("ServiceCart"));
+
+    int cartCount = (eventCart?.Count ?? 0) + (cateringCart?.Count ?? 0) + (serviceCart?.Count ?? 0);
+
+    // Filters
+    string searchKeyword = HttpContextAccessor.HttpContext.Request.Query["keyword"];
+    string priceRange = HttpContextAccessor.HttpContext.Request.Query["price"];
+
+    var services = Model.AsQueryable();
+
+    if (!string.IsNullOrWhiteSpace(searchKeyword))
+        services = services.Where(s => s.ServiceName.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                                       s.Description.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase));
+
+    if (!string.IsNullOrWhiteSpace(priceRange))
+    {
+        switch (priceRange)
+        {
+            case "low": services = services.Where(s => s.Price < 100); break;
+            case "medium": services = services.Where(s => s.Price >= 100 && s.Price <= 300); break;
+            case "high": services = services.Where(s => s.Price > 300); break;
+        }
+    }
+}
+<!-- Page Header -->
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">Decorations & Additional Services</h2>
+        <a href="@Url.Action("Cart", "Bookings")" class="btn btn-outline-primary position-relative cart-btn shadow-sm">
+            <i class="fas fa-shopping-cart me-1"></i> Cart (@cartCount)
+        </a>
+    </div>
+
+    <!-- Filter Form -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <input type="text" name="keyword" value="@searchKeyword" class="form-control" placeholder="Search by name or description" />
+        </div>
+        <div class="col-md-4">
+            <select name="price" class="form-select">
+                <option value="">All Prices</option>
+                <option value="low" @(priceRange == "low" ? "selected" : "")>Low (&lt; 100)</option>
+                <option value="medium" @(priceRange == "medium" ? "selected" : "")>Medium (100 - 300)</option>
+                <option value="high" @(priceRange == "high" ? "selected" : "")>High (&gt; 300)</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                <i class="fas fa-filter me-1"></i> Filter
+            </button>
+        </div>
+    </form>
+
+    @if (!services.Any())
+    {
+        <div class="alert alert-info shadow-sm rounded">
+            No services match your criteria.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var service in services.Where(s => s.IsActive))
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm hover-shadow rounded-4">
+                        @if (!string.IsNullOrEmpty(service.ImagePath))
+                        {
+                            <img src="@service.ImagePath" class="card-img-top rounded-top" style="height:180px; object-fit:cover;" alt="@service.ServiceName">
+                        }
+                        else
+                        {
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded-top" style="height:180px;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        }
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@service.ServiceName</h5>
+                            <p class="card-text text-muted">@service.Description</p>
+                            <p class="fw-bold">
+                                @service.Price.ToString("C")
+                                @if (service.PriceType == "PerPerson")
+                                {
+                                    <span>/person</span>
+                                }
+                                else if (service.PriceType == "PerHour")
+                                {
+
+                                    <span>/hour</span>
+                                }
+                                else if (service.PriceType == "Fixed")
+                                {
+
+                                    <span>(Fixed)</span>
+                                }
+                            </p>
+
+                            <div class="mt-auto">
+                                @using (Html.BeginForm("AddServiceToCart", "Bookings", FormMethod.Post, new { @class = "add-service-form", @onsubmit = !isAuthenticated ? "window.location.href='" + Url.Action("Login", "Account") + "'; return false;" : "" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("serviceId", service.ServiceId)
+
+                                    @if (service.PriceType == "Fixed")
+                                    {
+                                        <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                                            <i class="bi bi-cart-plus"></i> Add To Cart
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <div class="input-group">
+                                            <input type="number" name="quantity" min="1" value="1" class="form-control">
+                                            <button type="submit" class="btn btn-primary shadow-sm">
+                                                <i class="bi bi-cart-plus"></i> Add To Cart
+                                            </button>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle-fill"></i> Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="successMessage">Item added successfully!</div>
+            <div class="modal-footer">
+                <button class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .hover-shadow:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .card-text {
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            font-weight: 600;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".add-service-form").forEach(form => {
+                form.addEventListener("submit", function (e) {
+                    e.preventDefault();
+
+                    let formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error("Failed to add");
+                        return response.text();
+                    })
+                    .then(() => {
+                        // Update cart count
+                        let cartBtn = document.querySelector(".cart-btn");
+                        if (cartBtn) {
+                            let match = cartBtn.innerText.match(/\d+/);
+                            let currentCount = match ? parseInt(match[0]) : 0;
+                            cartBtn.innerHTML = `<i class="fas fa-shopping-cart me-1"></i> Cart (${currentCount + 1})`;
+                        }
+
+                        // Show success modal
+                        let serviceName = form.closest(".card").querySelector(".card-title").innerText;
+                        document.getElementById("successMessage").innerText = serviceName + " added to your cart successfully!";
+                        new bootstrap.Modal(document.getElementById("successModal")).show();
+                    })
+                    .catch(err => { alert("Something went wrong: " + err.message); });
+                });
+            });
+        });
+    </script>
+}

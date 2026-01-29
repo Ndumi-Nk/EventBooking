@@ -1,0 +1,22 @@
+﻿@model EventBooking.Models.AdditionalService
+
+<div class="container py-5">
+    <h2>Delete Service</h2>
+    <p>Are you sure you want to delete this service?</p>
+
+    <div class="card p-3">
+        <h4>@Model.ServiceName</h4>
+        <p>@Model.Description</p>
+        <p><strong>Price:</strong> @Model.Price.ToString("C")</p>
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <img src="@Model.ImagePath" width="120" class="rounded" />
+        }
+    </div>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="ServiceId" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

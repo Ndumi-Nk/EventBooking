@@ -1,0 +1,195 @@
+﻿@model EventBooking.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Login - EventBooking Pro";
+    Layout = "_Layout";
+}
+
+<style>
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    .card-header h2,
+    .card-header p,
+    .form-label,
+    .form-check-label,
+    .text-muted {
+        color: #333 !important;
+        font-weight: 500;
+    }
+
+    .form-control {
+        font-size: 1rem;
+    }
+
+    .modal-body {
+        max-height: 300px;
+        overflow-y: auto;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+</style>
+
+<div class="container-fluid vh-100 d-flex justify-content-center align-items-center"
+     style="background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 rounded-3">
+            <div class="card-header bg-gradient-primary text-white text-center py-4 rounded-top-3">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="rounded-circle bg-white p-3" style="width:80px;height:80px;">
+                        <i class="fas fa-calendar-check fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold mb-0">Welcome Back</h2>
+                <p class="mb-0 opacity-75">Sign in to your account</p>
+            </div>
+
+            <div class="card-body p-5">
+                @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <!-- Server-side errors -->
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3 fw-bold" })
+
+                    <div class="form-floating mb-3">
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control rounded-3", placeholder = "Email", type = "email", required = "required" })
+                        @Html.LabelFor(m => m.Email)
+                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control rounded-3", placeholder = "Password", required = "required" })
+                        @Html.LabelFor(m => m.Password)
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <div class="mb-4 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                            @Html.LabelFor(m => m.RememberMe, new { @class = "form-check-label text-muted" })
+                        </div>
+                        <a asp-action="ForgotPassword" asp-controller="Account" class="text-primary small fw-bold">Forgot Password?</a>
+                    </div>
+
+                    <!-- Terms Checkbox (Required) -->
+                    <div class="form-check mb-3" id="termsSection">
+                        @Html.CheckBoxFor(m => m.AgreeTerms, new { @class = "form-check-input", id = "agreeTerms" })
+                        <label class="form-check-label text-muted" for="agreeTerms">
+                            I agree to the <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a>
+                        </label>
+                        @Html.ValidationMessageFor(m => m.AgreeTerms, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 py-3 fw-bold">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </button>
+                }
+
+                <div class="text-center mt-4">
+                    <p class="text-muted">Or continue with</p>
+                    @using (Html.BeginForm("GoogleLogin", "Account", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-lg rounded-3 py-3 fw-bold mb-3">
+                            <i class="fab fa-google me-2"></i>Google
+                        </button>
+                    }
+                </div>
+
+                <div class="text-center mt-4 pt-3 border-top">
+                    <p class="text-muted">
+                        Don't have an account?
+                        @using (Html.BeginForm("Register", "Account", FormMethod.Get))
+                        {
+                            <button type="submit" class="btn btn-link text-primary fw-bold text-decoration-none p-0 m-0">
+                                Sign Up
+                            </button>
+                        }
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="termsLabel">Terms & Conditions</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Please read the following terms carefully before proceeding:</p>
+                <ul>
+                    <li>No refund will be issued once payment is made.</li>
+                    <li>Bookings cannot be cancelled once Payments have been made.</li>
+                    <li>All guests must comply with venue rules and regulations.</li>
+                    <li>The company is not responsible for lost or stolen personal items.</li>
+                    <li>Any damages caused during the event are the responsibility of the booking party.</li>
+                    <li>Failure to follow safety instructions may result in booking termination without refund.</li>
+                    <li>Event timings must be strictly adhered to as per agreement.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="agreeBtn" class="btn btn-success" data-bs-dismiss="modal">
+                    I Agree
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            'use strict';
+            const forms = document.querySelectorAll('.needs-validation');
+            const agreeTerms = document.getElementById('agreeTerms');
+            const agreeBtn = document.getElementById('agreeBtn');
+
+            forms.forEach(form => {
+                form.addEventListener('submit', event => {
+                    const isAdmin = document.body.classList.contains("is-admin");
+
+                    if (!form.checkValidity() || (!agreeTerms.checked && !isAdmin)) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        // Mark invalid
+                        agreeTerms.classList.add("is-invalid");
+
+                        // Auto-open modal if not agreed
+                        if (!agreeTerms.checked && !isAdmin) {
+                            const modal = new bootstrap.Modal(document.getElementById('termsModal'));
+                            modal.show();
+                        }
+                    } else {
+                        agreeTerms.classList.remove("is-invalid");
+                    }
+
+                    form.classList.add('was-validated');
+                });
+            });
+
+            // When modal "I Agree" button is clicked
+            agreeBtn.addEventListener('click', () => {
+                agreeTerms.checked = true;
+                agreeTerms.classList.remove("is-invalid");
+            });
+        })();
+    </script>
+}
+
+<!-- Script to skip terms for Admins -->
+@if (User.IsInRole("Admin"))
+{
+    <script>
+        document.body.classList.add("is-admin");
+        document.getElementById("termsSection").style.display = "none";
+    </script>
+}

@@ -1,0 +1,126 @@
+﻿@model IEnumerable<EventBooking.Models.Package>
+
+@{
+    ViewData["Title"] = "Browse Packages";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <h2 class="mb-5 text-center">Available Packages</h2>
+
+    <!-- Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-2">
+            <label for="eventFilter" class="form-label fw-bold">Filter by Event:</label>
+            <select id="eventFilter" class="form-select">
+                <option value="">All Events</option>
+                @foreach (var e in Model.Select(p => p.Event.EventName).Distinct())
+                {
+                    <option value="@e">@e</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4 mb-2">
+            <label for="minPrice" class="form-label fw-bold">Min Price (R):</label>
+            <input type="number" id="minPrice" class="form-control" placeholder="0">
+        </div>
+        <div class="col-md-4 mb-2">
+            <label for="maxPrice" class="form-label fw-bold">Max Price (R):</label>
+            <input type="number" id="maxPrice" class="form-control" placeholder="10000">
+        </div>
+    </div>
+
+    <!-- Packages Grid -->
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="packagesGrid">
+        @foreach (var package in Model)
+        {
+            <div class="col package-card"
+                 data-event="@package.Event.EventName"
+                 data-price="@package.TotalPrice">
+                <div class="card h-100 shadow-sm border-0">
+                    <img src="@(string.IsNullOrEmpty(package.ImagePath) ? "/images/default-package.jpg" : package.ImagePath)"
+                         class="card-img-top"
+                         alt="@package.PackageName"
+                         style="height: 200px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@package.PackageName</h5>
+                        <p class="card-text text-truncate">@package.Description</p>
+
+                        <p class="mb-1"><i class="bi bi-house-door me-2"></i> Event: @package.Event.EventName</p>
+                        <p class="mb-2"><i class="bi bi-cash-stack me-2"></i> Total: R@(package.TotalPrice)</p>
+                        <!-- Catering Section -->
+                        <p class="mb-1 fw-bold"><i class="bi bi-egg-fried me-1"></i> Catering:</p>
+                        @if (package.PackageCaterings != null && package.PackageCaterings.Any())
+                        {
+                            <ul class="small mb-2">
+                                @foreach (var pc in package.PackageCaterings)
+                                {
+                                    <li>@(pc.CateringMenu?.MenuName ?? "N/A")</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-2">No catering menus available</p>
+                        }
+
+                        <!-- Additional Services / Decorations Section -->
+                        <p class="mb-1 fw-bold"><i class="bi bi-stars me-1"></i> Services / Decorations:</p>
+                        @if (package.PackageServices != null && package.PackageServices.Any())
+                        {
+                            <ul class="small mb-3">
+                                @foreach (var ps in package.PackageServices)
+                                {
+                                    <li>@(ps.AdditionalService?.ServiceName ?? "N/A")</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-3">No services or decorations available</p>
+                        }
+
+
+                        <a href="@Url.Action("Book", "Package", new { id = package.PackageId })"
+                           class="btn btn-primary btn-sm mt-auto w-100">
+                            <i class="bi bi-cart-check me-1"></i> Book Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const eventFilter = document.getElementById('eventFilter');
+        const minPriceInput = document.getElementById('minPrice');
+        const maxPriceInput = document.getElementById('maxPrice');
+        const packagesGrid = document.getElementById('packagesGrid');
+        const packageCards = packagesGrid.querySelectorAll('.package-card');
+
+        function filterPackages() {
+            const eventValue = eventFilter.value.toLowerCase();
+            const minPrice = parseFloat(minPriceInput.value) || 0;
+            const maxPrice = parseFloat(maxPriceInput.value) || Infinity;
+
+            packageCards.forEach(card => {
+                const cardEvent = card.dataset.event.toLowerCase();
+                const cardPrice = parseFloat(card.dataset.price);
+
+                if ((eventValue === "" || cardEvent.includes(eventValue)) &&
+                    cardPrice >= minPrice &&
+                    cardPrice <= maxPrice) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        eventFilter.addEventListener('change', filterPackages);
+        minPriceInput.addEventListener('input', filterPackages);
+        maxPriceInput.addEventListener('input', filterPackages);
+    </script>
+}

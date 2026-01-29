@@ -1,0 +1,43 @@
+﻿@model EventBooking.Models.Package
+
+@{
+    ViewData["Title"] = "Package Details";
+    Layout = "_Layout";
+}
+}
+
+<div class="container py-5">
+    <div class="card shadow-sm border-0">
+        <img src="@Model.ImagePath ?? " /images/default-package.jpg"" class="card-img-top" alt="@Model.PackageName">
+        <div class="card-body">
+            <h3 class="card-title">@Model.PackageName</h3>
+            <p class="card-text">@Model.Description</p>
+            <p><i class="bi bi-house-door me-2"></i> Event: @Model.Event.EventName</p>
+
+            <h5 class="mt-3">Catering Menus:</h5>
+            <ul class="list-group mb-3">
+                @foreach (var c in Model.PackageCaterings)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        @c.CateringMenu.MenuName
+                        <span class="badge bg-primary rounded-pill">R@c.CateringMenu.PricePerPerson</span>
+                    </li>
+                }
+            </ul>
+
+            <h5>Additional Services:</h5>
+            <ul class="list-group mb-3">
+                @foreach (var s in Model.PackageServices)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        @s.AdditionalService.ServiceName
+                        <span class="badge bg-success rounded-pill">R@s.AdditionalService.Price</span>
+                    </li>
+                }
+            </ul>
+
+            <p class="fw-bold fs-5">Total Price: R@Model.TotalPrice</p>
+            <a asp-action="Index" class="btn btn-primary"><i class="bi bi-arrow-left me-1"></i> Back to Packages</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,149 @@
+﻿@model EventBooking.ViewModels.PaymentViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Make Payment";
+    Layout = "_Layout";
+
+    // South African culture for currency formatting
+    var saCulture = new CultureInfo("en-ZA");
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-credit-card me-2"></i>Make Payment</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Payment Summary -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-receipt me-2"></i>Payment Summary</h6>
+                        <p class="mb-1"><strong>Event:</strong> @Model.EventName</p>
+                        <p class="mb-1"><strong>Customer:</strong> @Model.CustomerName</p>
+
+                        @if (Model.CateringItems.Any())
+                        {
+                            <p class="mb-1"><strong>Catering:</strong></p>
+                            <ul class="list-group list-group-flush mb-2">
+                                @foreach (var c in Model.CateringItems)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        @c.Name (@c.Quantity) <span>@c.TotalPrice.ToString("C", saCulture)</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                        @if (Model.ServiceItems.Any())
+                        {
+                            <p class="mb-1"><strong>Services:</strong></p>
+                            <ul class="list-group list-group-flush mb-2">
+                                @foreach (var s in Model.ServiceItems)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        @s.Name (@s.Quantity) <span>@s.TotalPrice.ToString("C", saCulture)</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                        <p class="mb-0"><strong>Total Amount:</strong> <span class="fw-bold fs-5 text-success">@Model.Amount.ToString("C", saCulture)</span></p>
+                    </div>
+
+                    @using (Html.BeginForm("Create", "Payment", FormMethod.Post, new { novalidate = "novalidate" }))
+                    {
+                        @Html.HiddenFor(m => m.BookingId)
+                        @Html.HiddenFor(m => m.Amount)
+                        @Html.HiddenFor(m => m.EventName)
+                        @Html.HiddenFor(m => m.CustomerName)
+
+                        <!-- Payment Method -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Payment Method</h5>
+                            <div class="form-check">
+                                @Html.RadioButtonFor(m => m.PaymentMethod, "CreditCard", new { @class = "form-check-input", id = "creditCard", @checked = "checked" })
+                                <label class="form-check-label fw-bold" for="creditCard">
+                                    <i class="fas fa-credit-card me-2"></i>Credit/Debit Card
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                @Html.RadioButtonFor(m => m.PaymentMethod, "PayPal", new { @class = "form-check-input", id = "paypal" })
+                                <label class="form-check-label fw-bold" for="paypal">
+                                    <i class="fab fa-paypal me-2"></i>PayPal
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                @Html.RadioButtonFor(m => m.PaymentMethod, "BankTransfer", new { @class = "form-check-input", id = "bankTransfer" })
+                                <label class="form-check-label fw-bold" for="bankTransfer">
+                                    <i class="fas fa-university me-2"></i>Bank Transfer
+                                </label>
+                            </div>
+                            @Html.ValidationMessageFor(m => m.PaymentMethod, "", new { @class = "text-danger" })
+                        </div>
+
+                        <!-- Credit Card Details -->
+                        <div id="creditCardDetails">
+                            <h5 class="border-bottom pb-2">Card Details</h5>
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.CardHolderName, "Name on Card", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.CardHolderName, new { @class = "form-control", placeholder = "Enter name as shown on card" })
+                                @Html.ValidationMessageFor(m => m.CardHolderName, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.CardNumber, "Card Number", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.CardNumber, new { @class = "form-control", placeholder = "1234 5678 9012 3456" })
+                                @Html.ValidationMessageFor(m => m.CardNumber, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    @Html.LabelFor(m => m.ExpiryDate, "Expiry Date", new { @class = "form-label" })
+                                    @Html.TextBoxFor(m => m.ExpiryDate, new { @class = "form-control", placeholder = "MM/YY" })
+                                    @Html.ValidationMessageFor(m => m.ExpiryDate, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    @Html.LabelFor(m => m.CVV, "CVV", new { @class = "form-label" })
+                                    @Html.TextBoxFor(m => m.CVV, new { @class = "form-control", placeholder = "123" })
+                                    @Html.ValidationMessageFor(m => m.CVV, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-lock me-2"></i>
+                            <small>Your payment information is secure and encrypted. We do not store your card details.</small>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-controller="Bookings" asp-action="Details" asp-route-id="@Model.BookingId"
+                               class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Booking
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-lock me-1"></i>Pay @Model.Amount.ToString("C", saCulture)
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function togglePaymentDetails() {
+            const creditCardDetails = document.getElementById('creditCardDetails');
+            const selectedMethod = document.querySelector('input[name="PaymentMethod"]:checked').value;
+            creditCardDetails.style.display = selectedMethod === 'CreditCard' ? 'block' : 'none';
+        }
+
+        document.querySelectorAll('input[name="PaymentMethod"]').forEach(radio => {
+            radio.addEventListener('change', togglePaymentDetails);
+        });
+
+        document.addEventListener('DOMContentLoaded', togglePaymentDetails);
+    </script>
+}

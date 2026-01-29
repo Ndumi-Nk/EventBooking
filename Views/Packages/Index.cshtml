@@ -1,0 +1,69 @@
+﻿@model IEnumerable<EventBooking.Models.Package>
+@{
+    ViewData["Title"] = "Packages";
+    Layout = "_Layout";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">All Packages</h2>
+
+    <a asp-action="Create" class="btn btn-primary mb-3">Create New Package</a>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Event</th>
+                <th>Caterings</th>
+                <th>Services</th>
+                <th>Total Price</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var package in Model)
+            {
+                <tr>
+                    <td>
+                        @if (!string.IsNullOrEmpty(package.ImagePath))
+                        {
+                            <img src="@package.ImagePath" alt="@package.PackageName" width="80" />
+                        }
+                    </td>
+                    <td>@package.PackageName</td>
+                    <td>@package.Event?.EventName</td>
+                    <td>
+                        @if (package.PackageCaterings.Any())
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var pc in package.PackageCaterings)
+                                {
+                                    <li>@pc.CateringMenu?.MenuName</li>
+                                }
+                            </ul>
+                        }
+                    </td>
+                    <td>
+                        @if (package.PackageServices.Any())
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var ps in package.PackageServices)
+                                {
+                                    <li>@ps.AdditionalService?.ServiceName</li>
+                                }
+                            </ul>
+                        }
+                    </td>
+                    <td>@package.TotalPrice.ToString("C")</td>
+                    <td>@(package.IsActive ? "Yes" : "No")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@package.PackageId" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@package.PackageId" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,151 @@
+﻿@model EventBooking.Models.PackageBooking
+
+@{
+    ViewData["Title"] = "Booking Summary";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg rounded-4 p-4 border-0">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="fw-bold mb-0">Booking Summary</h3>
+                    <span class="badge
+                        @(Model.Status == EventBooking.Models.BookingStatuss.Pending ? "bg-warning text-dark" :
+                                                    Model.Status == EventBooking.Models.BookingStatuss.Approved ? "bg-success" : "bg-danger")
+                        fs-6 py-2 px-3">
+                        @Model.Status
+                    </span>
+                </div>
+                <hr class="my-3" />
+
+                <!-- Booking Info -->
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-2">
+                        <h5 class="fw-semibold">Package</h5>
+                        <p>@Model.Package.PackageName</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <h5 class="fw-semibold">Venue</h5>
+                        <p>@Model.Package.Event.EventName</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <h5 class="fw-semibold">Booking Date</h5>
+                        <p>@Model.BookingDate.ToString("dddd, MMM dd yyyy")</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <h5 class="fw-semibold">Number of People</h5>
+                        <p>@Model.NumberOfPeople</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <h5 class="fw-semibold">Contact Name</h5>
+                        <p>@Model.ContactName</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <h5 class="fw-semibold">Email</h5>
+                        <p>@Model.ContactEmail</p>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <h5 class="fw-semibold">Phone</h5>
+                        <p>@Model.ContactPhone</p>
+                    </div>
+                </div>
+
+                <hr class="my-3" />
+
+                <!-- Catering & Services -->
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <h5 class="fw-semibold">Catering Included</h5>
+                        @if (Model.Package.PackageCaterings.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var pc in Model.Package.PackageCaterings)
+                                {
+                                    <li class="list-group-item py-1">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        @pc.CateringMenu.MenuName
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No catering included.</p>
+                        }
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h5 class="fw-semibold">Additional Services</h5>
+                        @if (Model.Package.PackageServices.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var ps in Model.Package.PackageServices)
+                                {
+                                    <li class="list-group-item py-1">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        @ps.AdditionalService.ServiceName
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No additional services.</p>
+                        }
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.SpecialRequests))
+                {
+                    <div class="mb-3">
+                        <h5 class="fw-semibold">Special Requests</h5>
+                        <p>@Model.SpecialRequests</p>
+                    </div>
+                }
+
+                <!-- Status Alert -->
+                @{
+                    string alertClass = "alert-info";
+                    string alertMessage = "Your booking is pending approval. You will receive a confirmation email within 3 days.";
+                    string iconClass = "bi-info-circle-fill text-info";
+
+                    if (Model.Status == EventBooking.Models.BookingStatuss.Approved)
+                    {
+                        alertClass = "alert-success";
+                        alertMessage = "Your booking has been approved! We look forward to seeing you at the venue.";
+                        iconClass = "bi-check-circle-fill text-success";
+                    }
+                    else if (Model.Status == EventBooking.Models.BookingStatuss.Declined)
+                    {
+                        alertClass = "alert-danger";
+                        alertMessage = "Unfortunately, your booking was declined. Please contact support for more information.";
+                        iconClass = "bi-x-circle-fill text-danger";
+                    }
+                }
+
+                <div class="alert @alertClass mt-4 d-flex align-items-center" role="alert">
+                    <i class="bi @iconClass me-2"></i>
+                    @alertMessage
+                </div>
+
+                <!-- Action Button -->
+                <div class="d-flex justify-content-end mt-4">
+                    @if (Model.Status == EventBooking.Models.BookingStatuss.Declined)
+                    {
+                        <a href="@Url.Action("Contact", "Home")" class="btn btn-danger btn-lg rounded-pill">
+                            <i class="bi bi-envelope me-2"></i> Contact Support
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Browse", "Package")" class="btn btn-primary btn-lg rounded-pill">
+                            <i class="bi bi-arrow-left-circle me-2"></i> Back to Packages
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

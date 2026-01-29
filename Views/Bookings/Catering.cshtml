@@ -1,0 +1,186 @@
+﻿@model List<EventBooking.Models.CateringMenu>
+@using EventBooking.Models
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Newtonsoft.Json
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Catering Menus";
+
+    bool isAuthenticated = User.Identity.IsAuthenticated;
+
+    var eventCartJson = HttpContextAccessor.HttpContext.Session.GetString("EventCart");
+    var eventCart = string.IsNullOrEmpty(eventCartJson)
+        ? new List<Booking>()
+        : JsonConvert.DeserializeObject<List<Booking>>(eventCartJson);
+
+    var cateringCartJson = HttpContextAccessor.HttpContext.Session.GetString("CateringCart");
+    var cateringCart = string.IsNullOrEmpty(cateringCartJson)
+        ? new List<BookingCatering>()
+        : JsonConvert.DeserializeObject<List<BookingCatering>>(cateringCartJson);
+    // Read CateringCart
+    var serviceCartJson = HttpContextAccessor.HttpContext.Session.GetString("ServiceCart");
+    var serviceCart = string.IsNullOrEmpty(serviceCartJson)
+        ? new List<BookingService>()
+        : JsonConvert.DeserializeObject<List<BookingService>>(serviceCartJson);
+    int cartCount = (eventCart?.Count ?? 0) + (cateringCart?.Count ?? 0)+(serviceCart?.Count ?? 0);
+
+    string searchKeyword = HttpContextAccessor.HttpContext.Request.Query["keyword"];
+    var menus = Model.AsQueryable();
+
+    if (!string.IsNullOrWhiteSpace(searchKeyword))
+    {
+        menus = menus.Where(m => m.MenuName.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                                 m.Description.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase));
+    }
+}
+
+<div class="container py-5">
+    <!-- Header & Cart -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h2 class="fw-bold text-primary mb-2">Catering Menus</h2>
+        <div>
+            @using (Html.BeginForm("Cart", "Bookings", FormMethod.Get, new { @onsubmit = !isAuthenticated ? "window.location.href='" + Url.Action("Login", "Account") + "'; return false;" : "" }))
+            {
+                <button type="submit" class="btn btn-outline-primary position-relative">
+                    <i class="fas fa-shopping-cart me-1"></i> Cart
+                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                        @cartCount
+                    </span>
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Search Filter -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-8">
+            <input type="text" name="keyword" value="@searchKeyword" class="form-control" placeholder="Search menus..." />
+        </div>
+        <div class="col-md-4 d-grid">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i> Search</button>
+        </div>
+    </form>
+
+    <!-- Menu Cards -->
+    @if (!menus.Any())
+    {
+        <div class="alert alert-info shadow-sm rounded text-center py-4">
+            <i class="bi bi-info-circle me-2"></i>No catering menus match your search.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var menu in menus)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm menu-card rounded-4 overflow-hidden">
+                        @if (!string.IsNullOrEmpty(menu.ImagePath))
+                        {
+                            <img src="@menu.ImagePath" class="card-img-top" style="height:180px; object-fit:cover;" alt="@menu.MenuName" />
+                        }
+                        else
+                        {
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height:180px;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        }
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@menu.MenuName</h5>
+                            <p class="card-text text-truncate">@menu.Description</p>
+                            <p class="fw-bold mt-auto">@menu.PricePerPerson.ToString("C") per person</p>
+
+                            <div class="mt-3">
+                                @using (Html.BeginForm("AddCateringToCart", "Bookings", FormMethod.Post, new { @class = "add-to-cart-form", @onsubmit = !isAuthenticated ? "window.location.href='" + Url.Action("Login", "Account") + "'; return false;" : "" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("MenuId", menu.MenuId)
+                                    <div class="input-group">
+                                        <input type="number" name="Quantity" min="1" value="1" class="form-control">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-cart-plus me-1"></i> Add
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle-fill"></i> Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="successMessage">Item added successfully!</div>
+            <div class="modal-footer">
+                <button class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".add-to-cart-form").forEach(form => {
+                form.addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    let formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    })
+                    .then(response => response.ok ? response.text() : Promise.reject("Failed"))
+                    .then(() => {
+                        let cartBtn = document.querySelector(".cart-btn span");
+                        if (cartBtn) {
+                            let count = parseInt(cartBtn.innerText) || 0;
+                            cartBtn.innerText = count + 1;
+                        }
+                        document.getElementById("successMessage").innerText = "Catering menu added to your cart!";
+                        new bootstrap.Modal(document.getElementById("successModal")).show();
+                    })
+                    .catch(err => alert("Error: " + err));
+                });
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .menu-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+            .menu-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+
+        .card-text {
+            font-size: 0.95rem;
+        }
+
+        .input-group input {
+            max-width: 80px;
+        }
+    </style>
+}

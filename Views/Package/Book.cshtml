@@ -1,0 +1,251 @@
+﻿@model EventBooking.Models.Package
+
+@{
+    ViewData["Title"] = "Book Package";
+    Layout = "_Layout";
+}
+
+<style>
+    /* Card */
+    .booking-card {
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        background-color: #ffffff;
+    }
+
+        .booking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+
+    /* Header */
+    .booking-card-header {
+        background: linear-gradient(135deg, #4a90e2, #007bff);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    /* Image */
+    .booking-card-img {
+        height: 300px;
+        object-fit: cover;
+        border-bottom: 1px solid #eee;
+    }
+
+    /* Labels and inputs */
+    .booking-card label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .booking-card input,
+    .booking-card textarea {
+        border-radius: 10px;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+        .booking-card input:focus,
+        .booking-card textarea:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+
+    /* Buttons */
+    .btn-book {
+        background: linear-gradient(135deg, #28a745, #218838);
+        border: none;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+        .btn-book:hover {
+            background: linear-gradient(135deg, #218838, #28a745);
+            transform: scale(1.05);
+        }
+
+    /* Footer */
+    .booking-card-footer {
+        background-color: #f8f9fa;
+        font-size: 0.9rem;
+        color: #555;
+        text-align: center;
+        padding: 10px 15px;
+    }
+
+    /* Modal */
+    .modal-content {
+        border-radius: 15px;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #4a90e2, #007bff);
+        color: white;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .modal-footer .btn-success {
+        border-radius: 10px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card booking-card">
+                <div class="booking-card-header">
+                    <i class="bi bi-cart-check me-2"></i> Book Package: @Model.PackageName
+                </div>
+
+                <img src="@(string.IsNullOrEmpty(Model.ImagePath) ? "/images/default-package.jpg" : Model.ImagePath)"
+                     class="booking-card-img w-100" alt="@Model.PackageName" />
+
+                <div class="card-body px-4 py-4">
+                    <div class="text-center mb-4">
+                        <h5 class="fw-bold">@Model.Event.EventName</h5>
+                        <h6 class="text-success fw-semibold">Total Price: R@(Model.TotalPrice)</h6>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="mb-4 text-center">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#instructionsModal">
+                            <i class="bi bi-info-circle me-2"></i> Booking Instructions
+                        </button>
+                    </div>
+
+                    @using (Html.BeginForm("Book", "Package", FormMethod.Post, new { id = "bookingForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("PackageId", Model.PackageId)
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Number of People -->
+                        <div class="mb-3">
+                            <label for="NumberOfPeople">Number of People</label>
+                            <input type="number" name="NumberOfPeople" class="form-control" placeholder="Number of guests" value="@(ViewData.ModelState["NumberOfPeople"]?.AttemptedValue ?? "")" required min="1" />
+                        </div>
+
+                        <!-- Booking Date -->
+                        <div class="mb-3">
+                            <label for="BookingDate">Booking Date</label>
+                            <input type="date" id="BookingDate" name="BookingDate" class="form-control" value="@(ViewData.ModelState["BookingDate"]?.AttemptedValue ?? "")" required />
+                        </div>
+
+                        <!-- Booking Time -->
+                        <div class="mb-3">
+                            <label for="BookingTime">Booking Time</label>
+                            <input type="time" id="BookingTime" name="BookingTime" class="form-control" value="@(ViewData.ModelState["BookingTime"]?.AttemptedValue ?? "")" required />
+                        </div>
+
+                        <!-- Contact Name -->
+                        <div class="mb-3">
+                            <label for="ContactName">Contact Name</label>
+                            <input type="text" name="ContactName" class="form-control" placeholder="Full Name" value="@(ViewData.ModelState["ContactName"]?.AttemptedValue ?? "")" required />
+                        </div>
+
+                        <!-- Contact Email -->
+                        <div class="mb-3">
+                            <label for="ContactEmail">Email</label>
+                            <input type="email" name="ContactEmail" class="form-control" placeholder="Email Address" value="@(ViewData.ModelState["ContactEmail"]?.AttemptedValue ?? "")" required />
+                        </div>
+
+                        <!-- Contact Phone -->
+                        <div class="mb-3">
+                            <label for="ContactPhone">Phone</label>
+                            <input type="tel" name="ContactPhone" class="form-control" placeholder="Phone Number" value="@(ViewData.ModelState["ContactPhone"]?.AttemptedValue ?? "")" required />
+                        </div>
+
+                        <!-- Special Requests -->
+                        <div class="mb-3">
+                            <label for="SpecialRequests">Special Requests</label>
+                            <textarea name="SpecialRequests" class="form-control" rows="3" placeholder="Any special requests?">@ViewData.ModelState["SpecialRequests"]?.AttemptedValue</textarea>
+                        </div>
+
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-book btn-lg" id="submitBooking" disabled>
+                                <i class="bi bi-check-circle me-2"></i> Confirm Booking
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <div class="booking-card-footer">
+                    Please double-check your booking details before submitting.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Instructions Modal -->
+<div class="modal fade" id="instructionsModal" tabindex="-1" aria-labelledby="instructionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instructionsModalLabel"><i class="bi bi-info-circle me-2"></i> Booking Instructions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="ps-3">
+                    <li>Bookings are allowed for <strong>one day only</strong>.</li>
+                    <li>Number of days cannot exceed one.</li>
+                    <li>Book at least <strong>4 days in advance</strong>.</li>
+                    <li>Booking time must be between <strong>09:00 AM and 10:00 PM</strong>.</li>
+                    <li>Ensure the booking date is valid and in the future.</li>
+                    <li>Expect a response within <strong>3 days</strong>.</li>
+                    <li>All bookings must accept these instructions before submission.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="agreeBtn" data-bs-dismiss="modal">
+                    I Agree
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const agreeBtn = document.getElementById("agreeBtn");
+            const submitBtn = document.getElementById("submitBooking");
+            const bookingDate = document.getElementById("BookingDate");
+            const bookingTime = document.getElementById("BookingTime");
+
+            // Enable submit button after agreement
+            agreeBtn.addEventListener("click", function () {
+                submitBtn.disabled = false;
+            });
+
+            // Set min date to today + 4 days
+            const today = new Date();
+            today.setDate(today.getDate() + 4);
+            bookingDate.min = today.toISOString().split("T")[0];
+
+            // Validate booking time (9AM - 10PM)
+            bookingTime.addEventListener("input", function () {
+                const timeValue = bookingTime.value;
+                if (timeValue) {
+                    const [hours, minutes] = timeValue.split(":").map(Number);
+                    if (hours < 9 || (hours === 22 && minutes > 0) || hours > 22) {
+                        alert("Booking time must be between 09:00 and 22:00");
+                        bookingTime.value = "";
+                    }
+                }
+            });
+        });
+    </script>
+}
